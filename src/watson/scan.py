@@ -205,8 +205,6 @@ def run_scan(config: Config, log=print) -> ScanResult:
         "OSV lookup is on." if config.osv_lookup else "OSV lookup is off.",
         "External links are not requested." if config.no_external else "External links are checked with HEAD.",
     ]
-    if config.australian_terms:
-        notes.append("Australian school-term rules are on.")
     try:
         robots_url = f"{_origin(config.start_url)}/robots.txt"
         robots_fetch = fetcher.get(robots_url, limit=200_000)
@@ -260,8 +258,6 @@ def run_scan(config: Config, log=print) -> ScanResult:
                     newsletter_stale_weeks=config.newsletter_stale_weeks,
                     copyright_grace_years=config.copyright_grace_years,
                     calendar_grace_days=config.calendar_grace_days,
-                    australian_terms=config.australian_terms,
-                    terms=list(config.terms),
                 ),
                 today=config.today,
             )

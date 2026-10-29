@@ -11,7 +11,7 @@ from watson.security import (
     parse_set_cookie,
 )
 
-URL = "https://example-school.example.edu/"
+URL = "https://www.example.com/"
 NOW = datetime(2026, 10, 29, tzinfo=timezone.utc)
 
 
@@ -32,7 +32,7 @@ def test_missing_headers_on_https():
 
 
 def test_hsts_is_not_required_on_plain_http():
-    findings = grade_headers({}, scheme="http", url="http://example-school.example.edu/")
+    findings = grade_headers({}, scheme="http", url="http://www.example.com/")
     assert "hsts" not in _checks(findings)
 
 
@@ -160,6 +160,6 @@ def test_https_enforcement():
         tls_ok=True,
         tls_error=None,
         http_status=301,
-        http_location="https://example-school.example.edu/",
+        http_location="https://www.example.com/",
     )
     assert good == []

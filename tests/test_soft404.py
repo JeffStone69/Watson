@@ -2,8 +2,8 @@
 
 from watson.classify import REDIRECT, classify_link, detect_soft_404
 
-HOME = "https://example-school.example.edu/"
-PAGE = "https://example-school.example.edu/news/old-story"
+HOME = "https://www.example.com/"
+PAGE = "https://www.example.com/news/old-story"
 
 
 def test_redirect_to_home_is_a_soft_404():
@@ -30,7 +30,7 @@ def test_redirect_to_a_not_found_path_is_a_soft_404():
     assert detect_soft_404(
         requested_url=PAGE,
         status=302,
-        location="https://example-school.example.edu/not-found.html",
+        location="https://www.example.com/not-found.html",
         home_url=HOME,
     )
 
@@ -46,7 +46,7 @@ def test_real_404_is_not_soft():
 
 def test_the_not_found_page_itself_is_not_reported_again():
     assert not detect_soft_404(
-        requested_url="https://example-school.example.edu/not-found.html",
+        requested_url="https://www.example.com/not-found.html",
         status=200,
         location=None,
         home_url=HOME,

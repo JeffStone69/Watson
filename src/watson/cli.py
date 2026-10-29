@@ -1,4 +1,4 @@
-"""Command-line entry point for technicians and scheduled tasks."""
+"""Command-line entry point."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="watson",
         description=(
-            "Passive health check for a school's public website. "
+            "Passive health check for a public website. "
             "Watson only sends normal GET and HEAD requests, plus one TLS handshake. "
             "It does not log in, submit forms, guess hidden pages, or scan ports."
         ),
@@ -28,7 +28,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "url",
         nargs="?",
-        help="Public website address. Use the site your school is responsible for.",
+        help="Public website address. Only scan a site you are allowed to check.",
     )
     parser.add_argument("--config", type=Path, help="TOML settings file. See watson.example.toml.")
     parser.add_argument("--max-pages", type=int, help="Maximum HTML pages to read. Default 100.")
@@ -46,11 +46,6 @@ def _parser() -> argparse.ArgumentParser:
         help="Comma-separated list: links, freshness, security, or all. Default all.",
     )
     parser.add_argument(
-        "--australian-terms",
-        action="store_true",
-        help="Also read day/month/year dates and Australian term language.",
-    )
-    parser.add_argument(
         "--osv-lookup",
         action="store_true",
         help="Opt in: send library names and versions to api.osv.dev. Off by default.",
@@ -63,7 +58,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--demo",
         action="store_true",
-        help="Scan the built-in example site on this computer. Does not contact a school.",
+        help="Scan the built-in example site on this computer. Does not use the network.",
     )
     parser.add_argument("--verbose", action="store_true", help="Show the technical traceback if Watson crashes.")
     parser.add_argument("--version", action="version", version=f"Watson {__version__}")
@@ -87,7 +82,6 @@ def _build(argv: list[str]):
         "output_dir": args.output_dir,
         "no_external": True if args.no_external else None,
         "checks": args.checks,
-        "australian_terms": True if args.australian_terms else None,
         "osv_lookup": True if args.osv_lookup else None,
         "fail_on": args.fail_on,
         "demo": args.demo,
@@ -99,10 +93,6 @@ def _build(argv: list[str]):
         overrides["rate"] = 10
     if args.demo and "output_dir" not in overrides and "output_dir" not in file_data:
         overrides["output_dir"] = Path("watson-demo-report")
-    if args.demo and "australian_terms" not in overrides and "australian_terms" not in (
-        (file_data.get("freshness") or {}) if isinstance(file_data.get("freshness"), dict) else {}
-    ):
-        overrides["australian_terms"] = True
     if not args.demo and not overrides.get("start_url") and not file_data.get("start_url"):
         parser.error("Give a website address, or run watson --demo to practise on the example site.")
     return config_from_mapping(file_data, overrides=overrides)
@@ -138,7 +128,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if config.demo:
-            log("Demo mode: scanning the built-in example site on this computer. No school is contacted.")
+            log("Demo mode: scanning the built-in example site on this computer.")
             with serve_fixture() as site:
                 config.start_url = site.base + "/"
                 result = run_scan(config, log=log)

@@ -1,9 +1,9 @@
-"""Find last-updated dates, newest news, and stale school content."""
+"""Find last-updated dates, newest news, and stale content."""
 
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, timedelta
 from urllib.parse import urljoin, urlparse
 
@@ -46,17 +46,8 @@ _MONTH = (
 DAY_MONTH_YEAR = re.compile(rf"\b(\d{{1,2}})\s+({_MONTH})\s+(20\d{{2}})\b", re.IGNORECASE)
 MONTH_DAY_YEAR = re.compile(rf"\b({_MONTH})\s+(\d{{1,2}}),?\s+(20\d{{2}})\b", re.IGNORECASE)
 ISO_DATE = re.compile(r"\b(20\d{2})-(\d{2})-(\d{2})\b")
-DMY_DATE = re.compile(r"\b(\d{1,2})/(\d{1,2})/(20\d{2})\b")
 COPYRIGHT_RE = re.compile(
     r"(?:©|\(c\)|copyright)\s*((?:20\d{2}\s*[-–—]\s*)*)(20\d{2})",
-    re.IGNORECASE,
-)
-TERM_RE = re.compile(
-    r"\b((?:term|semester)\s+[1-4])\b(?:\W{0,16})(20\d{2})\b",
-    re.IGNORECASE,
-)
-TERM_RE_REV = re.compile(
-    r"\b(20\d{2})\b(?:\W{0,16})\b((?:term|semester)\s+[1-4])\b",
     re.IGNORECASE,
 )
 FILENAME_DATE = re.compile(r"(20\d{2})[-_](\d{2})[-_](\d{2})")
@@ -67,19 +58,8 @@ PROMOTED_CONTEXT = re.compile(
     r"upcoming|event|what'?s on|featured|promot|don'?t miss",
     re.IGNORECASE,
 )
-STUDENT_FREE = re.compile(
-    r"(?:student|pupil)[-\s]?free\s+days?(?:\s+on)?\s*[:\-]?\s*(.{0,48})",
-    re.IGNORECASE,
-)
 LAST_UPDATED = re.compile(r"last\s+updated(?:\s+on)?|updated\s+on|date\s+modified", re.IGNORECASE)
-CALENDAR_HINT = re.compile(r"calendar|term[- ]dates|term[- ]date", re.IGNORECASE)
-
-
-@dataclass
-class TermWindow:
-    name: str
-    start: date
-    end: date
+CALENDAR_HINT = re.compile(r"calendar", re.IGNORECASE)
 
 
 @dataclass
@@ -87,8 +67,6 @@ class FreshnessRules:
     newsletter_stale_weeks: int = 8
     copyright_grace_years: int = 0
     calendar_grace_days: int = 31
-    australian_terms: bool = False
-    terms: list[TermWindow] = field(default_factory=list)
 
 
 @dataclass
@@ -110,7 +88,7 @@ def _month_number(name: str) -> int | None:
     return MONTHS.get(name.lower())
 
 
-def parse_dates(text: str, *, day_first: bool = False) -> list[date]:
+def parse_dates(text: str) -> list[date]:
     """Pull concrete dates out of visible text. Invalid dates are skipped."""
     found: list[date] = []
     for year, month, day in ISO_DATE.findall(text or ""):
@@ -129,15 +107,10 @@ def parse_dates(text: str, *, day_first: bool = False) -> list[date]:
             parsed = _safe_date(int(year), month, int(day))
             if parsed:
                 found.append(parsed)
-    if day_first:
-        for day, month, year in DMY_DATE.findall(text or ""):
-            parsed = _safe_date(int(year), int(month), int(day))
-            if parsed:
-                found.append(parsed)
     return found
 
 
-def parse_datetime_attr(value: str, *, day_first: bool = False) -> date | None:
+def parse_datetime_attr(value: str) -> date | None:
     if not value:
         return None
     match = ISO_DATE.search(value)
@@ -145,15 +118,15 @@ def parse_datetime_attr(value: str, *, day_first: bool = False) -> date | None:
         parsed = _safe_date(int(match.group(1)), int(match.group(2)), int(match.group(3)))
         if parsed:
             return parsed
-    dates = parse_dates(value, day_first=day_first)
+    dates = parse_dates(value)
     return dates[0] if dates else None
 
 
 def is_past_calendar_year(year: int, today: date, grace_days: int = 31) -> bool:
-    """True when a term or calendar year is already out of date.
+    """True when a calendar year is already out of date.
 
     During the first `grace_days` of January, the previous calendar year is
-    still accepted so a school is not flagged on New Year's Day.
+    still accepted.
     """
     if year >= today.year:
         return False
@@ -169,18 +142,18 @@ def _filename_date(url: str) -> date | None:
     return _safe_date(int(match.group(1)), int(match.group(2)), int(match.group(3)))
 
 
-def _dates_in(element, *, day_first: bool) -> list[date]:
+def _dates_in(element) -> list[date]:
     dated: list[date] = []
     for node in element.find_all("time"):
-        parsed = parse_datetime_attr(node.get("datetime") or "", day_first=day_first)
+        parsed = parse_datetime_attr(node.get("datetime") or "")
         if parsed is None:
-            parsed_dates = parse_dates(node.get_text(" ", strip=True), day_first=day_first)
+            parsed_dates = parse_dates(node.get_text(" ", strip=True))
             parsed = parsed_dates[0] if parsed_dates else None
         if parsed:
             dated.append(parsed)
     if dated:
         return dated
-    return parse_dates(element.get_text(" ", strip=True), day_first=day_first)
+    return parse_dates(element.get_text(" ", strip=True))
 
 
 def _is_calendar_page(url: str, soup: BeautifulSoup) -> bool:
@@ -222,13 +195,13 @@ def _copyright_year(soup: BeautifulSoup) -> int | None:
     return None
 
 
-def _last_updated(soup: BeautifulSoup, *, day_first: bool) -> date | None:
+def _last_updated(soup: BeautifulSoup) -> date | None:
     for node in soup.find_all("time"):
         parent = node.parent.get_text(" ", strip=True) if node.parent else ""
         if LAST_UPDATED.search(parent):
-            parsed = parse_datetime_attr(node.get("datetime") or "", day_first=day_first)
+            parsed = parse_datetime_attr(node.get("datetime") or "")
             if parsed is None:
-                dates = parse_dates(node.get_text(" ", strip=True), day_first=day_first)
+                dates = parse_dates(node.get_text(" ", strip=True))
                 parsed = dates[0] if dates else None
             if parsed:
                 return parsed
@@ -237,17 +210,17 @@ def _last_updated(soup: BeautifulSoup, *, day_first: bool) -> date | None:
     if not match:
         return None
     window = text[match.end() : match.end() + 48]
-    dates = parse_dates(window, day_first=day_first)
+    dates = parse_dates(window)
     return dates[0] if dates else None
 
 
-def _collect_kind_dates(soup: BeautifulSoup, url: str, *, kind: str, day_first: bool) -> list[date]:
+def _collect_kind_dates(soup: BeautifulSoup, url: str, *, kind: str) -> list[date]:
     hint = NEWSLETTER_HINT if kind == "newsletter" else NEWS_HINT
     title = soup.title.get_text(" ", strip=True) if soup.title else ""
     heading = soup.h1.get_text(" ", strip=True) if soup.h1 else ""
     dates: list[date] = []
     if hint.search(f"{url} {title} {heading}"):
-        dates.extend(_dates_in(soup, day_first=day_first))
+        dates.extend(_dates_in(soup))
     for element in soup.find_all(True):
         ident = " ".join(element.get("class") or [])
         ident = f"{ident} {element.get('id') or ''}"
@@ -258,7 +231,7 @@ def _collect_kind_dates(soup: BeautifulSoup, url: str, *, kind: str, day_first: 
             # A news page should not also swallow a newsletter block.
             if kind == "news" and NEWSLETTER_HINT.search(f"{ident} {own_heading}"):
                 continue
-            dates.extend(_dates_in(element, day_first=day_first))
+            dates.extend(_dates_in(element))
     if kind == "newsletter":
         for anchor in soup.find_all("a", href=True):
             raw = f"{anchor.get('href', '')} {anchor.get_text(' ', strip=True)}"
@@ -267,53 +240,22 @@ def _collect_kind_dates(soup: BeautifulSoup, url: str, *, kind: str, day_first: 
             named = _filename_date(urljoin(url, anchor["href"]))
             if named:
                 dates.append(named)
-            dates.extend(parse_dates(anchor.get_text(" ", strip=True), day_first=day_first))
+            dates.extend(parse_dates(anchor.get_text(" ", strip=True)))
     return dates
 
 
-def _promoted_event_dates(soup: BeautifulSoup, *, day_first: bool) -> list[date]:
+def _promoted_event_dates(soup: BeautifulSoup) -> list[date]:
     found: list[date] = []
     for node in soup.find_all("time"):
         if _context(node) != "promoted":
             continue
-        parsed = parse_datetime_attr(node.get("datetime") or "", day_first=day_first)
+        parsed = parse_datetime_attr(node.get("datetime") or "")
         if parsed is None:
-            dates = parse_dates(node.get_text(" ", strip=True), day_first=day_first)
+            dates = parse_dates(node.get_text(" ", strip=True))
             parsed = dates[0] if dates else None
         if parsed:
             found.append(parsed)
-    if day_first:
-        for element in soup.find_all(["article", "li", "p"]):
-            if _context(element) != "promoted":
-                continue
-            found.extend(parse_dates(element.get_text(" ", strip=True), day_first=True))
     return found
-
-
-def _term_years(text: str) -> list[int]:
-    years = {int(year) for _label, year in TERM_RE.findall(text)}
-    years.update(int(year) for year, _label in TERM_RE_REV.findall(text))
-    return sorted(years)
-
-
-def _term_window_detail(text: str, url: str, rules: FreshnessRules, today: date, soup: BeautifulSoup) -> str | None:
-    if not rules.australian_terms or not rules.terms:
-        return None
-    if not _is_calendar_page(url, soup) and not re.search(r"\bterm\b", text, re.IGNORECASE):
-        return None
-    current = [item for item in rules.terms if item.start.year == today.year or item.end.year == today.year]
-    ended = [item for item in current if item.end < today]
-    still_open = [item for item in current if item.end >= today]
-    mentioned_ended = [
-        item for item in ended if re.search(rf"\b{re.escape(item.name)}\b", text, re.IGNORECASE)
-    ]
-    mentioned_open = [
-        item for item in still_open if re.search(rf"\b{re.escape(item.name)}\b", text, re.IGNORECASE)
-    ]
-    if mentioned_ended and not mentioned_open and _is_calendar_page(url, soup):
-        rendered = ", ".join(f"{item.name} (ended {item.end.isoformat()})" for item in mentioned_ended)
-        return f"Published term dates still feature {rendered}, and no later current term is shown."
-    return None
 
 
 def _describe(value: date | None) -> str:
@@ -327,14 +269,13 @@ def analyse_freshness(
     rules: FreshnessRules | None = None,
     today: date | None = None,
 ) -> FreshnessReport:
-    """Read dates from crawled HTML and flag stale school content.
+    """Read dates from crawled HTML and flag stale content.
 
     `pages` is a list of `(url, html)`. Details never copy page sentences,
     only the rule and the date Watson used.
     """
     rules = rules or FreshnessRules()
     today = today or date.today()
-    day_first = rules.australian_terms
     rows: list[UpdateRow] = []
     newsletter_dates: list[tuple[date, str]] = []
     news_dates: list[tuple[date, str]] = []
@@ -342,7 +283,7 @@ def analyse_freshness(
 
     for url, html in pages:
         soup = BeautifulSoup(html or "", "html.parser")
-        updated = _last_updated(soup, day_first=day_first)
+        updated = _last_updated(soup)
         if updated:
             rows.append(
                 UpdateRow(
@@ -354,33 +295,15 @@ def analyse_freshness(
                     fix="No action unless the date shows the page has been left behind.",
                 )
             )
-        for observed in _collect_kind_dates(soup, url, kind="newsletter", day_first=day_first):
+        for observed in _collect_kind_dates(soup, url, kind="newsletter"):
             newsletter_dates.append((observed, url))
-        for observed in _collect_kind_dates(soup, url, kind="news", day_first=day_first):
+        for observed in _collect_kind_dates(soup, url, kind="news"):
             news_dates.append((observed, url))
-        for observed in _promoted_event_dates(soup, day_first=day_first):
+        for observed in _promoted_event_dates(soup):
             event_dates.append((observed, url))
 
         text = soup.get_text("\n", strip=True)
-        term_years = _term_years(text)
-        past_years = [
-            year
-            for year in term_years
-            if is_past_calendar_year(year, today, rules.calendar_grace_days)
-        ]
-        if past_years:
-            rendered = ", ".join(str(year) for year in past_years)
-            rows.append(
-                UpdateRow(
-                    kind="Stale content",
-                    severity="Medium",
-                    page_url=url,
-                    observed_date=str(past_years[-1]),
-                    detail=f"Term or calendar dates refer to {rendered}, which is before {today.year}.",
-                    fix="Replace the calendar with this year's term dates from your department.",
-                )
-            )
-        elif _is_calendar_page(url, soup):
+        if _is_calendar_page(url, soup):
             years = [int(year) for year in re.findall(r"\b(20\d{2})\b", text)]
             if years and is_past_calendar_year(max(years), today, rules.calendar_grace_days):
                 latest = max(years)
@@ -391,36 +314,9 @@ def analyse_freshness(
                         page_url=url,
                         observed_date=str(latest),
                         detail=f"This calendar's latest year is {latest}, which is before {today.year}.",
-                        fix="Replace the calendar with this year's term dates from your department.",
+                        fix="Update the calendar if it is still meant to describe the current year.",
                     )
                 )
-        window_detail = _term_window_detail(text, url, rules, today, soup)
-        if window_detail:
-            rows.append(
-                UpdateRow(
-                    kind="Stale content",
-                    severity="Medium",
-                    page_url=url,
-                    observed_date=today.isoformat(),
-                    detail=window_detail,
-                    fix="Publish the current term dates from your department calendar.",
-                )
-            )
-        if rules.australian_terms:
-            for match in STUDENT_FREE.finditer(text):
-                dates = parse_dates(match.group(0), day_first=True)
-                for observed in dates:
-                    if observed < today:
-                        rows.append(
-                            UpdateRow(
-                                kind="Stale content",
-                                severity="Low",
-                                page_url=url,
-                                observed_date=observed.isoformat(),
-                                detail=f"A student-free day dated {observed.isoformat()} is still listed.",
-                                fix="Remove student-free days that have already passed, or move them to an archive.",
-                            )
-                        )
         copyright_year = _copyright_year(soup)
         if copyright_year is not None and copyright_year < today.year - rules.copyright_grace_years:
             rows.append(
@@ -432,7 +328,7 @@ def analyse_freshness(
                     detail=(
                         f"Footer copyright year is {copyright_year}; the current year is {today.year}."
                     ),
-                    fix="Update the footer copyright year, or ask the platform team if the footer is shared.",
+                    fix="Update the footer copyright year, or ask the host if the footer is shared.",
                 )
             )
 
@@ -468,7 +364,7 @@ def analyse_freshness(
     _add_newest(
         "Newest newsletter",
         newest_newsletter,
-        "Publish a newsletter if the school still sends one.",
+        "Publish a newsletter if the site still sends one.",
     )
     _add_newest("Newest news", newest_news, "No action. This is the newest news date Watson could read.")
     _add_newest("Newest event", newest_event, "No action. This is the newest event date Watson could read.")

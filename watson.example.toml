@@ -1,8 +1,8 @@
 # Watson sample configuration.
-# Copy to watson.toml and edit it. Only scan a site your school is responsible for.
-# Do not commit a file that points at a real school, and do not put crawl results in git.
+# Copy to watson.toml and edit it. Only scan a site you are allowed to check.
+# Do not commit a file that points at a private site, and do not put crawl results in git.
 
-start_url = "https://example-school.example.edu/"
+start_url = "https://www.example.com/"
 
 # How many HTML pages to read, and how many clicks from the start page.
 max_pages = 100
@@ -35,12 +35,3 @@ newsletter_stale_weeks = 8
 copyright_grace_years = 0
 # In early January, last year's calendar is still accepted for this many days.
 calendar_grace_days = 31
-# Day/month/year dates, student-free days, and optional term windows.
-australian_terms = true
-
-# Replace the sample below with the calendar your department published.
-# These lines are comments. They are not real term dates.
-# [[freshness.terms]]
-# name = "Term 1"
-# start = "2026-01-28"
-# end = "2026-04-02"

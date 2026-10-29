@@ -8,7 +8,6 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from watson import USER_AGENT
-from watson.freshness import TermWindow
 
 CHECKS = {"links", "freshness", "security"}
 
@@ -31,8 +30,6 @@ class Config:
     newsletter_stale_weeks: int = 8
     copyright_grace_years: int = 0
     calendar_grace_days: int = 31
-    australian_terms: bool = False
-    terms: list[TermWindow] = field(default_factory=list)
     osv_lookup: bool = False
     fail_on: str = "high"
     max_links: int = 2000
@@ -70,27 +67,6 @@ def parse_checks(value: object) -> set[str]:
     if unknown or not checks:
         raise UsageError("--checks must be links, freshness, security, or all")
     return checks
-
-
-def _terms_from(raw: object) -> list[TermWindow]:
-    if not raw:
-        return []
-    if not isinstance(raw, list):
-        raise UsageError("freshness.terms must be a list of term windows")
-    windows: list[TermWindow] = []
-    for item in raw:
-        if not isinstance(item, dict):
-            raise UsageError("Each freshness.terms entry needs name, start, and end")
-        try:
-            start = date.fromisoformat(str(item["start"]))
-            end = date.fromisoformat(str(item["end"]))
-            name = str(item["name"]).strip()
-        except (KeyError, TypeError, ValueError) as exc:
-            raise UsageError("Each term window needs name, start, and end as YYYY-MM-DD") from exc
-        if not name or end < start:
-            raise UsageError(f"Term window {name or '(unnamed)'} has a missing name or an end before its start")
-        windows.append(TermWindow(name=name, start=start, end=end))
-    return windows
 
 
 def validate_config(config: Config) -> None:
@@ -142,10 +118,6 @@ def config_from_mapping(data: dict, *, overrides: dict | None = None) -> Config:
             freshness.get("copyright_grace_years", data.get("copyright_grace_years", 0))
         ),
         calendar_grace_days=int(freshness.get("calendar_grace_days", data.get("calendar_grace_days", 31))),
-        australian_terms=bool(overrides["australian_terms"])
-        if overrides.get("australian_terms")
-        else bool(freshness.get("australian_terms", data.get("australian_terms", False))),
-        terms=_terms_from(freshness.get("terms")),
         osv_lookup=bool(overrides["osv_lookup"]) if overrides.get("osv_lookup") else bool(data.get("osv_lookup", False)),
         fail_on=str(overrides.get("fail_on") or data.get("fail_on") or "high"),
         max_links=int(data.get("max_links", 2000)),

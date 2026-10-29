@@ -15,7 +15,7 @@ def summary_rows(result: ScanResult) -> list[tuple[str, str]]:
     redirects = len(result.links_in(REDIRECT))
     stale = sum(1 for row in result.updates if row.kind == "Stale content")
     rows = [
-        ("Report", "Watson passive school-website check"),
+        ("Report", "Watson passive website check"),
         ("Target", result.target),
         ("Started", result.started_at),
         ("Finished", result.finished_at),

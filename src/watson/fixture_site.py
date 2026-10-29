@@ -1,6 +1,6 @@
-"""Built-in example site. It never calls a real school.
+"""Built-in example site. It never calls a real website.
 
-The pages use example.edu placeholders and reserved names such as
+The pages use example.com placeholders and reserved names such as
 ``old-sponsor.invalid``. Document author metadata is planted so Watson can
 prove it counts the field without copying the value.
 """

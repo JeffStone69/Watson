@@ -24,41 +24,41 @@ def test_library_thresholds():
 
 
 def test_email_count_omits_the_address():
-    html = '<p>Write to office@example.edu</p><a href="mailto:office@example.edu">Email the office</a>'
-    findings = content_findings([("http://example-school.example.edu/contact", html)])
+    html = '<p>Write to office@example.com</p><a href="mailto:office@example.com">Email the office</a>'
+    findings = content_findings([("http://www.example.com/contact", html)])
     email = next(finding for finding in findings if finding.check == "exposed-email")
-    assert "office@example.edu" not in email.evidence
-    assert "office@example.edu" not in email.title
+    assert "office@example.com" not in email.evidence
+    assert "office@example.com" not in email.title
     assert "1 unique" in email.evidence
 
 
 def test_two_pages_count_unique_addresses():
-    first = "<p>office@example.edu</p>"
-    second = "<p>office@example.edu and enrolments@example.edu</p>"
+    first = "<p>office@example.com</p>"
+    second = "<p>office@example.com and info@example.com</p>"
     findings = content_findings(
         [
-            ("http://example-school.example.edu/a", first),
-            ("http://example-school.example.edu/b", second),
+            ("http://www.example.com/a", first),
+            ("http://www.example.com/b", second),
         ]
     )
     email = next(finding for finding in findings if finding.check == "exposed-email")
     assert "2 unique" in email.evidence
-    assert "office@example.edu" not in email.evidence
-    assert "enrolments@example.edu" not in email.evidence
+    assert "office@example.com" not in email.evidence
+    assert "info@example.com" not in email.evidence
 
 
 def test_http_form_and_mixed_content():
     form = '<form action="http://forms.example/send" method="post"></form>'
-    assert insecure_form_targets(form, "http://example-school.example.edu/")
+    assert insecure_form_targets(form, "http://www.example.com/")
     page = """
     <script src="http://cdn.example/app.js"></script>
-    <img src="http://images.example/logo.png" alt="School logo">
+    <img src="http://images.example/logo.png" alt="Site logo">
     """
-    mixed = mixed_content_items(page, "https://example-school.example.edu/")
+    mixed = mixed_content_items(page, "https://www.example.com/")
     assert ("script", "http://cdn.example/app.js", "High") in [(tag, url, level) for tag, url, level in mixed]
     assert any(level == "Medium" for _tag, _url, level in mixed)
-    assert mixed_content_items(page, "http://example-school.example.edu/") == []
-    findings = content_findings([("https://example-school.example.edu/", page + form)])
+    assert mixed_content_items(page, "http://www.example.com/") == []
+    findings = content_findings([("https://www.example.com/", page + form)])
     checks = {finding.check for finding in findings}
     assert "mixed-content" in checks
     assert "insecure-form" in checks
@@ -80,9 +80,9 @@ def test_pdf_and_docx_metadata_values_are_not_returned():
 
 
 def test_redact_and_excel_formula():
-    assert redact("Email office@example.edu today") == "Email [redacted-email] today"
+    assert redact("Email office@example.com today") == "Email [redacted-email] today"
     assert excel_safe("=cmd|' /C calc'!A0").startswith("'")
-    assert excel_safe("Term dates") == "Term dates"
+    assert excel_safe("Calendar") == "Calendar"
 
 
 def test_reserved_names_are_not_contacted_and_rate_is_one_per_second():

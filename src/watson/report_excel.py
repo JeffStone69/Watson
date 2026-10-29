@@ -79,7 +79,7 @@ def write_excel(result: ScanResult, path: Path) -> None:
     workbook.remove(default)
     workbook.properties.creator = f"Watson {__version__}"
     workbook.properties.title = "Watson website check"
-    workbook.properties.subject = "Passive school website check"
+    workbook.properties.subject = "Passive website check"
     summary = summary_rows(result)
     _write_sheet(
         workbook,

@@ -1,6 +1,0 @@
-{
-  "name": "Australian school terms",
-  "region_example": "Queensland state schools",
-  "note": "EXAMPLE ONLY. This file ships with no real term dates and no school names. Put your department's published dates in watson.toml under freshness.terms. Do not copy a calendar off a school website into a public repository.",
-  "terms": []
-}

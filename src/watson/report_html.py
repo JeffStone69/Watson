@@ -165,7 +165,7 @@ def render_html(result: ScanResult) -> str:
 </header>
 <main>
   <div class="notice">
-    <strong>Keep this report inside the school.</strong>
+    <strong>Keep this report private.</strong>
     It lists page addresses and link text, which can be enough to recognise a page.
     It does not include email addresses, people's names from document properties, or metadata values.
     Do not publish it.
@@ -205,7 +205,7 @@ def render_html(result: ScanResult) -> str:
   </section>
   <section id="security">
     <h2>Security</h2>
-    <p><strong>Platform/hosting provider</strong> means the department or the company that hosts the template: HTTPS, certificates, and site-wide headers. <strong>School content editor</strong> means a link, a page, an embed, or a document the school can change.</p>
+    <p><strong>Platform/hosting provider</strong> means whoever runs the server or the shared template: HTTPS, certificates, and site-wide headers. <strong>Content editor</strong> means a link, a page, an embed, or a document someone can change in the content.</p>
     {_table(["Severity", "Check", "Title", "Evidence", "Owner", "Suggested fix", "Page"], security_rows)}
   </section>
 </main>

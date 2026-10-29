@@ -737,7 +737,7 @@ def content_findings(
                     title=f"Page loads {article} {tag} from another site",
                     evidence=f"{article.capitalize()} {tag} is loaded from {host}. Watson did not download the third-party file.",
                     owner=OWNER_EDITOR,
-                    fix="Confirm the school still wants this embed and that the provider is expected.",
+                    fix="Confirm this embed is still wanted and that the provider is expected.",
                     url=url,
                 )
             )
@@ -819,7 +819,7 @@ def security_txt_finding(*, present: bool, url: str) -> Finding:
         title="security.txt was not found",
         evidence="No file was found at /.well-known/security.txt or /security.txt.",
         owner=OWNER_PLATFORM,
-        fix="Optional. Ask the platform team if the department wants a security.txt contact published.",
+        fix="Optional. Ask the host if a security.txt contact should be published.",
         url=url,
     )
 

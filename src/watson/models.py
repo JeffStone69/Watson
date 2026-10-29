@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 
 OWNER_PLATFORM = "Platform/hosting provider"
-OWNER_EDITOR = "School content editor"
+OWNER_EDITOR = "Content editor"
 
 SEVERITY_ORDER = {"High": 0, "Medium": 1, "Low": 2, "Info": 3}
 

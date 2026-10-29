@@ -1,4 +1,4 @@
-"""End-to-end scan of the built-in example site. No live school is contacted."""
+"""End-to-end scan of the built-in example site. No live site is contacted."""
 
 import io
 import json
@@ -17,8 +17,8 @@ from watson.scan import run_scan
 FORBIDDEN = (
     DOCUMENT_AUTHOR,
     COOKIE_HEADER,
-    "office@example.edu",
-    "enrolments@example.edu",
+    "office@example.com",
+    "info@example.com",
     PRIVATE_MARKER,
 )
 
@@ -49,7 +49,6 @@ def test_fixture_scan_fills_every_report_category(tmp_path):
             rate=100,
             timeout=5,
             output_dir=tmp_path,
-            australian_terms=True,
             today=date(2026, 10, 29),
         )
         result = run_scan(config, log=lambda _message: None)
@@ -87,7 +86,7 @@ def test_fixture_scan_fills_every_report_category(tmp_path):
         assert required in checks, required
     assert any(finding.severity == "High" for finding in result.findings)
     assert any(finding.owner == "Platform/hosting provider" for finding in result.findings)
-    assert any(finding.owner == "School content editor" for finding in result.findings)
+    assert any(finding.owner == "Content editor" for finding in result.findings)
     email = next(finding for finding in result.findings if finding.check == "exposed-email")
     assert "2 unique" in email.evidence
 
@@ -158,4 +157,4 @@ def test_cli_demo_writes_three_reports(tmp_path):
 def test_cli_usage_codes():
     assert main(["--version"]) == 0
     assert main([]) == 2
-    assert main(["--demo", "https://example-school.example.edu/"]) == 2
+    assert main(["--demo", "https://www.example.com/"]) == 2

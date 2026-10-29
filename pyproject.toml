@@ -5,16 +5,16 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "watson"
 dynamic = ["version"]
-description = "Passive health check for a school's public website: broken links, stale content, and security headers."
+description = "Passive health check for a public website: broken links, stale content, and security headers."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 authors = [{ name = "Watson contributors" }]
-keywords = ["school", "website", "links", "security", "education"]
+keywords = ["website", "links", "security", "crawler"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
-    "Intended Audience :: Education",
+    "Intended Audience :: System Administrators",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
