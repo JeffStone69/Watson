@@ -1,0 +1,46 @@
+# Watson sample configuration.
+# Copy to watson.toml and edit it. Only scan a site your school is responsible for.
+# Do not commit a file that points at a real school, and do not put crawl results in git.
+
+start_url = "https://example-school.example.edu/"
+
+# How many HTML pages to read, and how many clicks from the start page.
+max_pages = 100
+max_depth = 3
+
+# One request per second is the polite default. 2 is two requests per second.
+rate = 1.0
+timeout = 15
+
+output_dir = "watson-report"
+
+# Skip links that leave this host name.
+no_external = false
+
+# links, freshness, security, or all.
+checks = ["links", "freshness", "security"]
+
+# Exit 1 when a security finding is at least this serious.
+# Broken links also exit 1 unless this is "none".
+fail_on = "high"
+
+# Opt-in vulnerability lookup. Off by default.
+# When true, Watson sends library name and version only to https://api.osv.dev
+osv_lookup = false
+
+[freshness]
+# Flag a newest newsletter older than this many weeks.
+newsletter_stale_weeks = 8
+# A copyright year older than (this year - grace) is flagged. 0 means the year must be this year.
+copyright_grace_years = 0
+# In early January, last year's calendar is still accepted for this many days.
+calendar_grace_days = 31
+# Day/month/year dates, student-free days, and optional term windows.
+australian_terms = true
+
+# Replace the sample below with the calendar your department published.
+# These lines are comments. They are not real term dates.
+# [[freshness.terms]]
+# name = "Term 1"
+# start = "2026-01-28"
+# end = "2026-04-02"

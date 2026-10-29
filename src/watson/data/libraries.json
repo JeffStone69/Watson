@@ -1,0 +1,108 @@
+[
+  {
+    "name": "jQuery",
+    "patterns": [
+      "jquery(?:\\.min|\\.slim|\\.slim\\.min)?[-.](\\d+\\.\\d+\\.\\d+)",
+      "jquery v(\\d+\\.\\d+\\.\\d+)"
+    ],
+    "thresholds": [
+      {"below": "3.0.0", "severity": "High"},
+      {"below": "3.5.0", "severity": "Medium"},
+      {"below": "3.7.1", "severity": "Low"}
+    ],
+    "fix": "Upgrade to a current jQuery 3.7 release, or remove jQuery if the template no longer needs it. Versions before 3.5.0 are affected by published cross-site scripting issues (CVE-2020-11022 and CVE-2020-11023). If the template is department-hosted, ask the web team to upgrade it."
+  },
+  {
+    "name": "jQuery UI",
+    "patterns": [
+      "jquery-ui(?:\\.min)?[-.](\\d+\\.\\d+\\.\\d+)"
+    ],
+    "thresholds": [
+      {"below": "1.13.2", "severity": "Medium"}
+    ],
+    "fix": "Upgrade jQuery UI to 1.13.2 or later, or remove it if it is unused. If the template is department-hosted, ask the web team to upgrade it."
+  },
+  {
+    "name": "Bootstrap",
+    "patterns": [
+      "bootstrap(?:\\.min|\\.bundle\\.min)?[-./](\\d+\\.\\d+\\.\\d+)"
+    ],
+    "thresholds": [
+      {"below": "4.0.0", "severity": "Medium"},
+      {"below": "5.3.0", "severity": "Low"}
+    ],
+    "fix": "Upgrade Bootstrap to a current 5.3 release. Bootstrap 3 is out of support. If the template is department-hosted, ask the web team to upgrade it."
+  },
+  {
+    "name": "AngularJS",
+    "patterns": [
+      "angular(?:\\.min)?[-.](1\\.\\d+\\.\\d+)"
+    ],
+    "thresholds": [
+      {"below": "2.0.0", "severity": "High"}
+    ],
+    "fix": "AngularJS 1.x is end of life. Plan a replacement with the team that owns the template. Do not stay on 1.x."
+  },
+  {
+    "name": "Lodash",
+    "patterns": [
+      "lodash(?:\\.min)?[-.](\\d+\\.\\d+\\.\\d+)"
+    ],
+    "thresholds": [
+      {"below": "4.17.21", "severity": "High"}
+    ],
+    "fix": "Upgrade Lodash to 4.17.21 or later. Older 4.x releases have published prototype-pollution issues."
+  },
+  {
+    "name": "Moment.js",
+    "patterns": [
+      "moment(?:\\.min)?[-.](\\d+\\.\\d+\\.\\d+)"
+    ],
+    "thresholds": [
+      {"below": "99.0.0", "severity": "Low"}
+    ],
+    "fix": "Moment.js is unmaintained. Prefer the platform's current date tools when the template is next rebuilt. This is not an emergency on its own."
+  },
+  {
+    "name": "Handlebars",
+    "patterns": [
+      "handlebars(?:\\.min)?[-.](\\d+\\.\\d+\\.\\d+)"
+    ],
+    "thresholds": [
+      {"below": "4.7.8", "severity": "High"}
+    ],
+    "fix": "Upgrade Handlebars to 4.7.8 or later. Older releases have published template-injection issues."
+  },
+  {
+    "name": "Underscore",
+    "patterns": [
+      "underscore(?:\\.min)?[-.](\\d+\\.\\d+\\.\\d+)"
+    ],
+    "thresholds": [
+      {"below": "1.13.6", "severity": "Medium"}
+    ],
+    "fix": "Upgrade Underscore to 1.13.6 or later, or remove it if it is unused."
+  },
+  {
+    "name": "CKEditor 4",
+    "patterns": [
+      "ckeditor(?:[-./]|\\.min[-.])(4\\.\\d+\\.\\d+)"
+    ],
+    "thresholds": [
+      {"below": "5.0.0", "severity": "High"}
+    ],
+    "fix": "CKEditor 4 is end of life. Ask the platform team about a supported editor before the next template change."
+  },
+  {
+    "name": "DOMPurify",
+    "patterns": [
+      "dompurify(?:\\.min)?[-.](\\d+\\.\\d+\\.\\d+)"
+    ],
+    "thresholds": [
+      {"below": "2.4.0", "severity": "High"},
+      {"below": "3.0.0", "severity": "Medium"},
+      {"below": "3.1.0", "severity": "Low"}
+    ],
+    "fix": "Upgrade DOMPurify to a current 3.x release. Check the project's security notes when you do."
+  }
+]

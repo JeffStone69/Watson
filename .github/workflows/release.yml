@@ -1,0 +1,56 @@
+name: Release executables
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: watson-windows-x64.exe
+          - os: macos-latest
+            artifact: watson-macos-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+          python -m pip install pyinstaller
+      - name: Build one-file executable
+        shell: bash
+        run: |
+          pyinstaller --noconfirm --clean --onefile --name watson \
+            --collect-all watson \
+            --collect-all httpx \
+            --collect-all openpyxl \
+            --collect-all bs4 \
+            src/watson/__main__.py
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            mv dist/watson.exe "dist/${{ matrix.artifact }}"
+          else
+            mv dist/watson "dist/${{ matrix.artifact }}"
+          fi
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}
+      - name: Attach to the GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/${{ matrix.artifact }}
+          generate_release_notes: true
